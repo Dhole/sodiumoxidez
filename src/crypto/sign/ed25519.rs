@@ -3,6 +3,8 @@
 //! standard notion of unforgeability for a public-key signature scheme under
 //! chosen-message attacks.
 
+// use super::scalarmult::curve25519;
+use crypto::scalarmult::curve25519;
 use ffi;
 use libc::c_ulonglong;
 #[cfg(not(feature = "std"))]
@@ -50,11 +52,32 @@ impl SecretKey {
         }
         pk
     }
+    /// `to_curve25519()` converts the Ed25519 secret key `sk` to Curve25519 secret
+    /// key.
+    pub fn to_curve25519(&self) -> curve25519::Scalar {
+        let mut curve_sk = curve25519::Scalar([0; curve25519::SCALARBYTES]);
+        unsafe {
+            ffi::crypto_sign_ed25519_sk_to_curve25519(curve_sk.0.as_mut_ptr(), self.0.as_ptr());
+        }
+        curve_sk
+    }
 }
 
 new_type! {
     /// `PublicKey` for signatures
     public PublicKey(PUBLICKEYBYTES);
+}
+
+impl PublicKey {
+    /// `to_curve25519()` converts the Ed25519 public key `pk` to Curve25519 public
+    /// key.
+    pub fn to_curve25519(&self) -> curve25519::GroupElement {
+        let mut curve_pk = curve25519::GroupElement([0; curve25519::GROUPELEMENTBYTES]);
+        unsafe {
+            ffi::crypto_sign_ed25519_pk_to_curve25519(curve_pk.0.as_mut_ptr(), self.0.as_ptr());
+        }
+        curve_pk
+    }
 }
 
 new_type! {
@@ -242,6 +265,17 @@ mod test {
     fn test_sk_to_pk() {
         let (pk, sk) = gen_keypair();
         assert_eq!(sk.public_key(), pk);
+    }
+
+    #[test]
+    fn test_keypair_to_curve25519() {
+        let (pk, sk) = gen_keypair();
+        let curve25519_pk = pk.to_curve25519();
+        let curve25519_sk = sk.to_curve25519();
+        assert_ne!(
+            curve25519::scalarmult(&curve25519_sk, &curve25519_pk),
+            Err(())
+        );
     }
 
     #[test]
