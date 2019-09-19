@@ -1,4 +1,11 @@
-# sodiumoxide
+# sodiumoxidez
+
+Forked from [sodiumoxide](https://github.com/sodiumoxide/sodiumoxide)
+
+Changelog:
+- Add conversion from ed25519 to curve25519
+
+---
 
 |Crate|Documentation|Linux/OS X|Windows|Coverage|Gitter|
 |:---:|:-----------:|:--------:|:-----:|:------:|:----:|
